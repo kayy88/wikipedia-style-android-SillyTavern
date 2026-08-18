@@ -1,24 +1,50 @@
 /* ==========================================================
-   WIKIPEDIA EXTENSION STYLES
+   WIKIPEDIA EXTENSION: TOTAL ISOLATION STYLESHEET
    ========================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Georgia&family=Source+Sans+3:wght@400;500;600&display=swap');
 
-/* --- 1. OVERALL DOCUMENT THEME --- */
-body, #sheld, #chat {
+/* --- 1. TOTAL THEME PURGE: STRIP ALL PRESET GLOWS & BLURS --- */
+body.wikipedia-ui-active,
+body.wikipedia-ui-active #sheld,
+body.wikipedia-ui-active #chat,
+body.wikipedia-ui-active .mes,
+body.wikipedia-ui-active #top-bar,
+body.wikipedia-ui-active #form_sheld {
+  background-image: none !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+}
+
+body.wikipedia-ui-active, 
+body.wikipedia-ui-active #sheld, 
+body.wikipedia-ui-active #chat {
   background-color: #ffffff !important;
   color: #202122 !important;
   font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
 }
 
-#chat {
+body.wikipedia-ui-active #chat {
   max-width: 860px !important;
   margin: 0 auto !important;
   padding: 12px 14px 110px 14px !important;
   border: none !important;
 }
 
-/* --- 2. JAVASCRIPT-INJECTED WIKIPEDIA HEADER --- */
+/* --- 2. ISOLATED TOP NAVIGATION --- */
+body.wikipedia-ui-active #top-bar {
+  height: 78px !important;
+  background: #ffffff !important;
+  border: none !important;
+}
+
+body.wikipedia-ui-active #top-bar > div:not(#wiki-custom-nav) {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 #wiki-custom-nav {
   position: fixed;
   top: 0;
@@ -30,18 +56,6 @@ body, #sheld, #chat {
   z-index: 2000;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-#top-bar {
-  height: 78px !important;
-  background: #ffffff !important;
-  border: none !important;
-}
-
-#top-bar > div:not(#wiki-custom-nav) {
-  opacity: 0 !important;
-  pointer-events: none !important; /* Hides default clutter while keeping DOM triggers */
 }
 
 .wiki-top-row {
@@ -72,7 +86,7 @@ body, #sheld, #chat {
 }
 
 .wiki-btn {
-  background: transparent;
+  background: #f8f9fa;
   border: 1px solid #c8ccd1;
   border-radius: 2px;
   color: #202122;
@@ -108,66 +122,69 @@ body, #sheld, #chat {
   background: #ffffff;
 }
 
-/* --- 3. JAVASCRIPT-INJECTED WIKIPEDIA INFOBOX --- */
+/* --- 3. WIKIPEDIA INFOBOX --- */
 .wiki-infobox {
-  border: 1px solid #a2a9b1;
-  background-color: #f8f9fa;
-  color: #202122;
-  margin: 12px auto 20px auto;
-  padding: 4px;
-  width: 100%;
-  max-width: 380px;
-  border-collapse: collapse;
-  font-size: 13px;
+  border: 1px solid #a2a9b1 !important;
+  background-color: #f8f9fa !important;
+  color: #202122 !important;
+  margin: 12px auto 20px auto !important;
+  padding: 4px !important;
+  width: 100% !important;
+  max-width: 380px !important;
+  border-collapse: collapse !important;
+  font-size: 13px !important;
 }
 
 .wiki-infobox-header {
-  background-color: #eaecf0;
-  font-family: 'Georgia', serif;
-  font-size: 15px;
-  font-weight: bold;
-  padding: 6px;
-  text-align: center;
-  border-bottom: 1px solid #a2a9b1;
+  background-color: #eaecf0 !important;
+  font-family: 'Georgia', serif !important;
+  font-size: 15px !important;
+  font-weight: bold !important;
+  padding: 6px !important;
+  text-align: center !important;
+  border-bottom: 1px solid #a2a9b1 !important;
+  color: #000000 !important;
 }
 
 .wiki-infobox-image {
-  text-align: center;
-  padding: 8px 4px;
-  background: #ffffff;
+  text-align: center !important;
+  padding: 8px 4px !important;
+  background: #ffffff !important;
 }
 
 .wiki-infobox-image img {
-  max-width: 160px;
-  max-height: 200px;
-  border: 1px solid #c8ccd1;
-  padding: 2px;
-  background: #f8f9fa;
+  max-width: 160px !important;
+  max-height: 200px !important;
+  border: 1px solid #c8ccd1 !important;
+  padding: 2px !important;
+  background: #f8f9fa !important;
 }
 
 .wiki-infobox-caption {
-  font-size: 11px;
-  color: #54595e;
-  margin-top: 4px;
+  font-size: 11px !important;
+  color: #54595e !important;
+  margin-top: 4px !important;
 }
 
 .wiki-infobox th {
-  text-align: left;
-  padding: 4px 8px;
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #eaecf0;
-  width: 35%;
-  font-weight: 600;
+  text-align: left !important;
+  padding: 4px 8px !important;
+  background-color: #f8f9fa !important;
+  border-bottom: 1px solid #eaecf0 !important;
+  width: 35% !important;
+  font-weight: 600 !important;
+  color: #202122 !important;
 }
 
 .wiki-infobox td {
-  padding: 4px 8px;
-  background-color: #ffffff;
-  border-bottom: 1px solid #eaecf0;
+  padding: 4px 8px !important;
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #eaecf0 !important;
+  color: #202122 !important;
 }
 
-/* --- 4. ARTICLE FLOW & MESSAGE BLOCKS --- */
-.mes {
+/* --- 4. ARTICLE STREAM (DESTROYS CHAT BUBBLES) --- */
+body.wikipedia-ui-active .mes {
   display: block !important;
   background: transparent !important;
   border: none !important;
@@ -176,12 +193,11 @@ body, #sheld, #chat {
   padding: 0 !important;
 }
 
-.mes:not([is_user="true"]) .mesAvatarWrapper {
-  display: none !important; /* Hidden in body flow because avatar is placed in the Infobox */
+body.wikipedia-ui-active .mes:not([is_user="true"]) .mesAvatarWrapper {
+  display: none !important;
 }
 
-.mes:not([is_user="true"]) .name_text,
-.wiki-section-heading {
+body.wikipedia-ui-active .mes:not([is_user="true"]) .name_text {
   font-family: 'Georgia', serif !important;
   font-size: 1.35rem !important;
   font-weight: 500 !important;
@@ -193,50 +209,54 @@ body, #sheld, #chat {
   margin-bottom: 10px !important;
 }
 
-.mes:not([is_user="true"]) .mes_text {
+body.wikipedia-ui-active .mes:not([is_user="true"]) .mes_text {
   font-size: 1rem !important;
   line-height: 1.7 !important;
   color: #202122 !important;
 }
 
-.mes_text p {
+body.wikipedia-ui-active .mes_text p {
   margin: 0 0 0.9em 0 !important;
+  color: #202122 !important;
 }
 
-/* User Talk / Revision Box */
-.mes[is_user="true"] {
+body.wikipedia-ui-active .mes[is_user="true"] {
   background: #f8f9fa !important;
   border: 1px solid #a2a9b1 !important;
   border-left: 4px solid #3366cc !important;
   padding: 10px 14px !important;
 }
 
-.mes[is_user="true"] .name_text {
+body.wikipedia-ui-active .mes[is_user="true"] .name_text {
   font-size: 0.95rem !important;
   color: #3366cc !important;
   font-weight: bold !important;
 }
 
-/* --- 5. "PUBLISH CHANGES" INPUT DOCK --- */
-#form_sheld {
+body.wikipedia-ui-active .mes[is_user="true"] .mes_text {
+  color: #54595e !important;
+}
+
+/* --- 5. EDIT PAGE / INPUT DOCK --- */
+body.wikipedia-ui-active #form_sheld {
   background: #ffffff !important;
   border-top: 1px solid #a2a9b1 !important;
   padding: 6px 10px !important;
 }
 
-#send_form {
+body.wikipedia-ui-active #send_form {
   background: #f8f9fa !important;
   border: 1px solid #a2a9b1 !important;
   border-radius: 2px !important;
 }
 
-#send_textarea {
+body.wikipedia-ui-active #send_textarea {
   color: #202122 !important;
   font-family: 'Source Sans 3', sans-serif !important;
   font-size: 16px !important;
 }
 
-#send_but {
+body.wikipedia-ui-active #send_but {
   background-color: #3366cc !important;
   color: #ffffff !important;
   border-radius: 2px !important;
