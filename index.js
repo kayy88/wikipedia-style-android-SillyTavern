@@ -1,9 +1,53 @@
 import { getContext } from '../../extensions.js';
 import { eventSource, event_types } from '../../../../script.js';
 
-// Global helper to safely access SillyTavern context
 function getST() {
     return typeof SillyTavern !== 'undefined' ? SillyTavern.getContext() : getContext();
+}
+
+/**
+ * 0. THEME NEUTRALIZER: Purges all active user theme presets and locks variables
+ */
+function purgeAndLockThemePresets() {
+    const root = document.documentElement;
+
+    // 1. Force Wikipedia Design Tokens into CSS Root
+    const wikiTokens = {
+        '--wiki-bg': '#ffffff',
+        '--wiki-surface': '#f8f9fa',
+        '--wiki-border': '#a2a9b1',
+        '--wiki-border-light': '#eaecf0',
+        '--wiki-text-main': '#202122',
+        '--wiki-text-muted': '#54595e',
+        '--wiki-link': '#3366cc',
+        
+        // Neutralize SillyTavern's native theme variables
+        '--main-text-color': '#202122',
+        '--italics-text-color': '#54595e',
+        '--underline-text-color': '#3366cc',
+        '--quote-text-color': '#54595e',
+        '--blur-tint-color': 'rgba(255, 255, 255, 1)',
+        '--chat-tint-color': 'rgba(255, 255, 255, 1)',
+        '--user-mes-blur-tint-color': 'rgba(248, 249, 250, 1)',
+        '--bot-mes-blur-tint-color': 'rgba(255, 255, 255, 1)',
+        '--shadow-color': 'transparent',
+        '--shadow-width': '0px',
+        '--blur-strength': '0px',
+        '--border-color': '#a2a9b1'
+    };
+
+    for (const [key, value] of Object.entries(wikiTokens)) {
+        root.style.setProperty(key, value, 'important');
+    }
+
+    // 2. Disable user-injected Theme Custom CSS that clashes
+    const userThemeStyle = document.getElementById('theme-custom-css');
+    if (userThemeStyle) {
+        userThemeStyle.disabled = true;
+    }
+
+    // 3. Mark body with extension isolation flag
+    document.body.classList.add('wikipedia-ui-active');
 }
 
 /**
@@ -13,7 +57,6 @@ function buildWikipediaHeader() {
     const topBar = document.getElementById('top-bar');
     if (!topBar || document.getElementById('wiki-custom-nav')) return;
 
-    // Create Wikipedia Header Container
     const wikiNav = document.createElement('div');
     wikiNav.id = 'wiki-custom-nav';
     wikiNav.innerHTML = `
@@ -29,15 +72,12 @@ function buildWikipediaHeader() {
         </div>
         <div class="wiki-tabs-row">
             <button class="wiki-tab active" id="wiki-tab-article">Article</button>
-            <button class="wiki-tab" id="wiki-tab-talk">Talk / Notes</button>
             <button class="wiki-tab" id="wiki-tab-edit">Edit Page</button>
         </div>
     `;
 
-    // Insert at the very top
     topBar.prepend(wikiNav);
 
-    // Wire up native drawer buttons to our new Wikipedia buttons
     document.getElementById('wiki-menu-trigger')?.addEventListener('click', () => {
         document.getElementById('left-nav-panel-button')?.click();
     });
@@ -46,7 +86,6 @@ function buildWikipediaHeader() {
         document.getElementById('right-nav-panel-button')?.click();
     });
 
-    // Wire up "Edit Page" tab to scroll to the input area
     document.getElementById('wiki-tab-edit')?.addEventListener('click', () => {
         document.getElementById('send_textarea')?.focus();
         document.getElementById('form_sheld')?.scrollIntoView({ behavior: 'smooth' });
@@ -55,7 +94,6 @@ function buildWikipediaHeader() {
 
 /**
  * 2. DYNAMICALLY GENERATE WIKIPEDIA INFOBOX
- * Reads the active character card and generates an Infobox table at the top of #chat
  */
 function injectCharacterInfobox() {
     const context = getST();
@@ -65,16 +103,14 @@ function injectCharacterInfobox() {
     const char = context.characters[context.characterId];
     if (!char) return;
 
-    // Remove existing infobox if present
     document.getElementById('wiki-character-infobox')?.remove();
 
-    // Build Infobox Table
     const infobox = document.createElement('table');
     infobox.id = 'wiki-character-infobox';
     infobox.className = 'wiki-infobox';
     
     const avatarUrl = char.avatar ? `/thumbnail?type=avatar&avatar=${char.avatar}` : '';
-    const creator = char.creator || 'Community Entry';
+    const creator = char.creator || 'Community Record';
     const tags = Array.isArray(char.tags) && char.tags.length > 0 ? char.tags.join(', ') : 'Article Subject';
 
     infobox.innerHTML = `
@@ -94,7 +130,7 @@ function injectCharacterInfobox() {
                 <td>Character / Entity</td>
             </tr>
             <tr>
-                <th scope="row">Creator / Origin</th>
+                <th scope="row">Author / Origin</th>
                 <td>${creator}</td>
             </tr>
             <tr>
@@ -103,56 +139,46 @@ function injectCharacterInfobox() {
             </tr>
             <tr>
                 <th scope="row">Status</th>
-                <td>Active Record</td>
+                <td>Archived Entry</td>
             </tr>
         </tbody>
     `;
 
-    // Prepend to top of the article
     chat.prepend(infobox);
 }
 
 /**
- * 3. FORMAT BOT MESSAGES AS ENCYCLOPEDIA SECTIONS
- */
-function formatMessageAsWikiSection(mesId) {
-    const messageNode = document.querySelector(`.mes[mesid="${mesId}"]`);
-    if (!messageNode) return;
-
-    const isUser = messageNode.getAttribute('is_user') === 'true';
-    const block = messageNode.querySelector('.mes_block');
-    const nameText = messageNode.querySelector('.name_text');
-
-    if (!isUser && nameText && block) {
-        // Ensure character name acts as a genuine Wikipedia Section Header
-        nameText.classList.add('wiki-section-heading');
-    }
-}
-
-/**
- * 4. INITIALIZATION HOOKS
+ * 3. INITIALIZATION & LIFECYCLE HOOKS
  */
 export function init() {
-    // When SillyTavern finishes loading
+    // Initial purge
+    purgeAndLockThemePresets();
+
+    // App loaded
     eventSource.on(event_types.APP_READY, () => {
+        purgeAndLockThemePresets();
         buildWikipediaHeader();
         injectCharacterInfobox();
     });
 
-    // When changing characters or starting a new chat
+    // Character or chat changed
     eventSource.on(event_types.CHAT_CHANGED, () => {
+        purgeAndLockThemePresets();
         injectCharacterInfobox();
     });
 
-    // When a message is rendered into the DOM
-    eventSource.on(event_types.CHARACTER_MESSAGE_RENDERED, (mesId) => {
-        formatMessageAsWikiSection(mesId);
-    });
+    // If user changes a theme setting in the menu, immediately re-purge it
+    if (event_types.THEME_CHANGED) {
+        eventSource.on(event_types.THEME_CHANGED, () => {
+            purgeAndLockThemePresets();
+        });
+    }
 
-    eventSource.on(event_types.USER_MESSAGE_RENDERED, (mesId) => {
-        formatMessageAsWikiSection(mesId);
-    });
+    if (event_types.SETTINGS_LOADED) {
+        eventSource.on(event_types.SETTINGS_LOADED, () => {
+            purgeAndLockThemePresets();
+        });
+    }
 }
 
-// Auto-run initialization
 init();
