@@ -1,0 +1,9 @@
+{
+  "display_name": "Wikipedia Article UI",
+  "loading_order": 10,
+  "js": "index.js",
+  "css": "style.css",
+  "author": "Custom",
+  "version": "1.0.0",
+  "description": "Transforms SillyTavern into an authentic Wikipedia article interface with dynamic character infoboxes and wiki navigation."
+}
