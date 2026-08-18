@@ -1,17 +1,19 @@
-import { getContext } from '../../extensions.js';
-import { eventSource, event_types } from '../../../../script.js';
+/**
+ * WIKIPEDIA ARTICLE UI - TAURITAVERN EXTENSION
+ * Uses global SillyTavern API without fragile relative imports.
+ */
 
+// Helper to safely get the live SillyTavern context
 function getST() {
-    return typeof SillyTavern !== 'undefined' ? SillyTavern.getContext() : getContext();
+    return window.SillyTavern ? window.SillyTavern.getContext() : null;
 }
 
 /**
- * 0. THEME NEUTRALIZER: Purges all active user theme presets and locks variables
+ * 0. THEME NEUTRALIZER: Purges all active user theme presets
  */
 function purgeAndLockThemePresets() {
     const root = document.documentElement;
 
-    // 1. Force Wikipedia Design Tokens into CSS Root
     const wikiTokens = {
         '--wiki-bg': '#ffffff',
         '--wiki-surface': '#f8f9fa',
@@ -20,8 +22,6 @@ function purgeAndLockThemePresets() {
         '--wiki-text-main': '#202122',
         '--wiki-text-muted': '#54595e',
         '--wiki-link': '#3366cc',
-        
-        // Neutralize SillyTavern's native theme variables
         '--main-text-color': '#202122',
         '--italics-text-color': '#54595e',
         '--underline-text-color': '#3366cc',
@@ -40,18 +40,16 @@ function purgeAndLockThemePresets() {
         root.style.setProperty(key, value, 'important');
     }
 
-    // 2. Disable user-injected Theme Custom CSS that clashes
     const userThemeStyle = document.getElementById('theme-custom-css');
     if (userThemeStyle) {
         userThemeStyle.disabled = true;
     }
 
-    // 3. Mark body with extension isolation flag
     document.body.classList.add('wikipedia-ui-active');
 }
 
 /**
- * 1. OVERHAUL TOP BAR INTO WIKIPEDIA NAVIGATION
+ * 1. REBUILD TOP BAR INTO WIKIPEDIA NAVIGATION
  */
 function buildWikipediaHeader() {
     const topBar = document.getElementById('top-bar');
@@ -98,7 +96,7 @@ function buildWikipediaHeader() {
 function injectCharacterInfobox() {
     const context = getST();
     const chat = document.getElementById('chat');
-    if (!chat || !context.characters || context.characterId === undefined) return;
+    if (!chat || !context || !context.characters || context.characterId === undefined) return;
 
     const char = context.characters[context.characterId];
     if (!char) return;
@@ -109,9 +107,9 @@ function injectCharacterInfobox() {
     infobox.id = 'wiki-character-infobox';
     infobox.className = 'wiki-infobox';
     
-    const avatarUrl = char.avatar ? `/thumbnail?type=avatar&avatar=${char.avatar}` : '';
-    const creator = char.creator || 'Community Record';
-    const tags = Array.isArray(char.tags) && char.tags.length > 0 ? char.tags.join(', ') : 'Article Subject';
+    const avatarUrl = char.avatar ? `/thumbnail?type=avatar&avatar=${encodeURIComponent(char.avatar)}` : '';
+    const creator = char.creator || 'Community Entry';
+    const tags = Array.isArray(char.tags) && char.tags.length > 0 ? char.tags.join(', ') : 'Archived Subject';
 
     infobox.innerHTML = `
         <tbody>
@@ -122,7 +120,7 @@ function injectCharacterInfobox() {
             <tr>
                 <td colspan="2" class="wiki-infobox-image">
                     <img src="${avatarUrl}" alt="${char.name}" />
-                    <div class="wiki-infobox-caption">Primary visual record of ${char.name}</div>
+                    <div class="wiki-infobox-caption">Visual record of ${char.name}</div>
                 </td>
             </tr>` : ''}
             <tr>
@@ -130,7 +128,7 @@ function injectCharacterInfobox() {
                 <td>Character / Entity</td>
             </tr>
             <tr>
-                <th scope="row">Author / Origin</th>
+                <th scope="row">Creator / Origin</th>
                 <td>${creator}</td>
             </tr>
             <tr>
@@ -139,7 +137,7 @@ function injectCharacterInfobox() {
             </tr>
             <tr>
                 <th scope="row">Status</th>
-                <td>Archived Entry</td>
+                <td>Active Record</td>
             </tr>
         </tbody>
     `;
@@ -148,26 +146,31 @@ function injectCharacterInfobox() {
 }
 
 /**
- * 3. INITIALIZATION & LIFECYCLE HOOKS
+ * 3. MAIN INITIALIZATION
  */
 export function init() {
-    // Initial purge
     purgeAndLockThemePresets();
 
-    // App loaded
-    eventSource.on(event_types.APP_READY, () => {
-        purgeAndLockThemePresets();
-        buildWikipediaHeader();
-        injectCharacterInfobox();
-    });
+    const context = getST();
+    if (!context || !context.eventSource) {
+        // Fallback if event bus is still starting up
+        setTimeout(init, 200);
+        return;
+    }
 
-    // Character or chat changed
-    eventSource.on(event_types.CHAT_CHANGED, () => {
-        purgeAndLockThemePresets();
-        injectCharacterInfobox();
-    });
+    const { eventSource, event_types } = context;
 
-    // If user changes a theme setting in the menu, immediately re-purge it
+    buildWikipediaHeader();
+    injectCharacterInfobox();
+
+    // Hook into lifecycle events
+    if (event_types.CHAT_CHANGED) {
+        eventSource.on(event_types.CHAT_CHANGED, () => {
+            purgeAndLockThemePresets();
+            injectCharacterInfobox();
+        });
+    }
+
     if (event_types.THEME_CHANGED) {
         eventSource.on(event_types.THEME_CHANGED, () => {
             purgeAndLockThemePresets();
@@ -181,4 +184,5 @@ export function init() {
     }
 }
 
+// Auto-run when the module loads
 init();
