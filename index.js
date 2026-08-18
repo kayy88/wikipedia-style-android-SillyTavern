@@ -1,13 +1,15 @@
 /**
- * WIKIPEDIA FULL-SYSTEM TOTAL CONVERSION ENGINE
- * Reconstructs the entire application DOM, drawers, modals, and input controls.
+ * WIKIPEDIA FULL-SYSTEM OVERHAUL - TAURITAVERN ENGINE
+ * Fixed: Zero infinite loops, event-driven architecture.
  */
 
 function getST() {
     return window.SillyTavern ? window.SillyTavern.getContext() : null;
 }
 
-// 1. COMPREHENSIVE THEME PURGE & VARIABLE LOCK
+/**
+ * 1. THEME LOCK (Runs ONCE per event, never in a loop)
+ */
 function enforceWikipediaTokens() {
     const root = document.documentElement;
 
@@ -20,9 +22,8 @@ function enforceWikipediaTokens() {
         '--wiki-text-main': '#202122',
         '--wiki-text-muted': '#54595e',
         '--wiki-link': '#3366cc',
-        '--wiki-link-hover': '#2a4b8d',
         
-        // Hard override of all SillyTavern native theme variables
+        // Neutralize native SillyTavern colors
         '--main-text-color': '#202122',
         '--italics-text-color': '#54595e',
         '--underline-text-color': '#3366cc',
@@ -41,14 +42,17 @@ function enforceWikipediaTokens() {
         root.style.setProperty(k, v, 'important');
     }
 
-    // Disable any active theme custom css tag
     const themeStyle = document.getElementById('theme-custom-css');
     if (themeStyle) themeStyle.disabled = true;
 
-    document.body.classList.add('wiki-total-overhaul');
+    if (!document.body.classList.contains('wiki-total-overhaul')) {
+        document.body.classList.add('wiki-total-overhaul');
+    }
 }
 
-// 2. REBUILD TOP BAR (CLEAN HIDING OF STOCK CLUTTER)
+/**
+ * 2. TOP BAR RE-ARCHITECTURE
+ */
 function buildWikipediaHeader() {
     const topBar = document.getElementById('top-bar');
     if (!topBar || document.getElementById('wiki-custom-nav')) return;
@@ -57,26 +61,24 @@ function buildWikipediaHeader() {
     wikiNav.id = 'wiki-custom-nav';
     wikiNav.innerHTML = `
         <div class="wiki-top-row">
-            <button id="wiki-btn-characters" class="wiki-nav-btn" title="Characters & Personas">☰ Menu</button>
+            <button id="wiki-btn-characters" class="wiki-nav-btn" title="Characters">☰ Menu</button>
             <div class="wiki-brand-block">
                 <span class="wiki-brand-title">WIKIPEDIA</span>
                 <span class="wiki-brand-subtitle">The Free Encyclopedia</span>
             </div>
             <div class="wiki-right-actions">
-                <button id="wiki-btn-lorebook" class="wiki-nav-btn" title="World Info">📖 Lore</button>
-                <button id="wiki-btn-settings" class="wiki-nav-btn" title="Settings">⚙ Settings</button>
+                <button id="wiki-btn-lorebook" class="wiki-nav-btn" title="Lorebooks">📖 Lore</button>
+                <button id="wiki-btn-settings" class="wiki-nav-btn" title="Settings">⚙</button>
             </div>
         </div>
         <div class="wiki-tabs-strip">
             <button class="wiki-tab-btn active" id="wiki-tab-article">Article</button>
-            <button class="wiki-tab-btn" id="wiki-tab-talk">Revision Log</button>
             <button class="wiki-tab-btn" id="wiki-tab-edit">Edit Section</button>
         </div>
     `;
 
     topBar.prepend(wikiNav);
 
-    // Event Bindings
     document.getElementById('wiki-btn-characters')?.addEventListener('click', () => {
         document.getElementById('left-nav-panel-button')?.click();
     });
@@ -90,13 +92,14 @@ function buildWikipediaHeader() {
     });
 
     document.getElementById('wiki-tab-edit')?.addEventListener('click', () => {
-        const textarea = document.getElementById('send_textarea');
-        textarea?.focus();
+        document.getElementById('send_textarea')?.focus();
         document.getElementById('form_sheld')?.scrollIntoView({ behavior: 'smooth' });
     });
 }
 
-// 3. AUTO-GENERATE COMPREHENSIVE INFOBOX
+/**
+ * 3. AUTO-GENERATE COMPREHENSIVE INFOBOX
+ */
 function injectCharacterInfobox() {
     const context = getST();
     const chat = document.getElementById('chat');
@@ -124,15 +127,15 @@ function injectCharacterInfobox() {
             <tr>
                 <td colspan="2" class="wiki-infobox-image">
                     <img src="${avatarUrl}" alt="${char.name}" />
-                    <div class="wiki-infobox-caption">Archival photographic plate: ${char.name}</div>
+                    <div class="wiki-infobox-caption">Archival record: ${char.name}</div>
                 </td>
             </tr>` : ''}
             <tr>
                 <th scope="row">Classification</th>
-                <td>Entity / Subject Record</td>
+                <td>Entity Record</td>
             </tr>
             <tr>
-                <th scope="row">Author / Origin</th>
+                <th scope="row">Origin / Creator</th>
                 <td>${creator}</td>
             </tr>
             <tr>
@@ -140,7 +143,7 @@ function injectCharacterInfobox() {
                 <td>${tags}</td>
             </tr>
             <tr>
-                <th scope="row">Record Status</th>
+                <th scope="row">Status</th>
                 <td>Verified Entry</td>
             </tr>
         </tbody>
@@ -149,28 +152,15 @@ function injectCharacterInfobox() {
     chat.prepend(infobox);
 }
 
-// 4. WATCHDOG MUTATION OBSERVER (Prevents any popup/menu from escaping Wikipedia theme)
-function startMutationWatchdog() {
-    const observer = new MutationObserver(() => {
-        enforceWikipediaTokens();
-    });
-
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-        attributeFilter: ['style', 'class']
-    });
-}
-
-// 5. MASTER INITIALIZATION
+/**
+ * 4. EVENT-BASED LIFECYCLE (Zero recursive loops)
+ */
 export function init() {
     enforceWikipediaTokens();
-    startMutationWatchdog();
 
     const context = getST();
     if (!context || !context.eventSource) {
-        setTimeout(init, 250);
+        setTimeout(init, 300);
         return;
     }
 
